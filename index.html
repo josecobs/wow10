@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Music Scanner</title>
+  
+  <!-- Import A-Frame and AR.js libraries -->
+  <script src="https://aframe.io"></script>
+  <script src="https://githack.com"></script>
+
+  <style>
+    /* Styling for the music playlist popup */
+    .arjs-loader {
+      height: 100%; width: 100%; position: absolute; top: 0; left: 0;
+      background-color: rgba(0, 0, 0, 0.8); z-index: 9999;
+      display: flex; justify-content: center; align-items: center; color: white;
+    }
+    #playlist-popup {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      width: 80%; max-width: 400px; background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px; padding: 15px; display: none; z-index: 10;
+      box-shadow: 0px 10px 30px rgba(0,0,0,0.3); font-family: sans-serif;
+    }
+    .track { padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; }
+    .now-playing { color: #ff007f; }
+  </style>
+</head>
+
+<body style="margin: 0px; overflow: hidden;">
+
+  <!-- Simple Loading Screen while AR loads -->
+  <div class="arjs-loader"><div>Loading Camera & Audio Assets...</div></div>
+
+  <!-- HTML Playlist Popup Overlay -->
+  <div id="playlist-popup">
+    <h3 style="margin-top:0;">🎵 Now Playing: Ariana Grande</h3>
+    <div class="track now-playing">1. yes, and? (0:00 / 3:34)</div>
+    <div class="track" style="color: #666;">2. we can't be friends (bye)</div>
+    <div class="track" style="color: #666;">3. supernatural</div>
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="ariana-audio" src="assets/yes-and.mp3" preload="auto"></audio>
+
+  <!-- AR.js Logic Hook -->
+  <script>
+    AFRAME.registerComponent('music-controller', {
+      init: function () {
+        const marker = this.el;
+        const audio = document.querySelector('#ariana-audio');
+        const popup = document.querySelector('#playlist-popup');
+
+        // Event listener for when the camera spots the printed photo
+        marker.addEventListener('markerFound', function () {
+          popup.style.display = 'block'; // Show playlist UI
+          audio.play().catch(error => {
+            console.log("Autoplay blocked by browser. User interaction required first.");
+          });
+        });
+
+        // Event listener for when the camera loses track of the photo
+        marker.addEventListener('markerLost', function () {
+          audio.pause(); // Pause music when looking away
+          popup.style.display = 'none';  // Hide playlist UI
+        });
+      }
+    });
+  </script>
+
+  <!-- AR Scene Layout -->
+  <a-scene
+    vr-mode-ui="enabled: false;"
+    renderer="logarithmicDepthBuffer: true;"
+    embedded
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+
+    <!-- The NFT Image Target tracking component -->
+    <!-- Point url to the path of your downloaded marker files without extension -->
+    <a-nft
+      music-controller
+      type="nft"
+      url="markers/ariana-album"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance=".01"
+      smoothThreshold="5">
+      
+      <!-- Optional: You can place 3D floating models or images over the photo here -->
+    </a-nft>
+
+    
+    
+  </a-scene>
+
+  <script>
+    // Hide the black loading screen once the camera assets are fully ready
+    window.addEventListener("arjs-nft-loaded", (event) => {
+       document.querySelector('.arjs-loader').style.display = 'none';
+    });
+  </script>
+</body>
+</html>
